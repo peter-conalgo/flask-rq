@@ -22,6 +22,7 @@ from rq import Queue, Worker
 default_config = {
     'RQ_DEFAULT_HOST': 'localhost',
     'RQ_DEFAULT_PORT': 6379,
+    'RQ_DEFAULT_UNIXSOCK': None,
     'RQ_DEFAULT_PASSWORD': None,
     'RQ_DEFAULT_DB': 0
 }
@@ -42,6 +43,7 @@ def get_connection(queue='default'):
         return redis.from_url(url, db=config_value(queue, 'DB'))
     return redis.Redis(host=config_value(queue, 'HOST'),
         port=config_value(queue, 'PORT'),
+        unix_socket_path=config_value(queue, 'UNIXSOCK'),
         password=config_value(queue, 'PASSWORD'),
         db=config_value(queue, 'DB'))
 
@@ -56,6 +58,9 @@ def get_server_url(name):
     if url:
         url_kwargs = urlparse(url)
         return '%s://%s' % (url_kwargs.scheme, url_kwargs.netloc)
+    elif config_value(name, 'UNIXSOCK'):
+        # XXX redis doesn't actually support a URL for unix sockets... so I made this up
+        return 'redis:%s' % config_value(name, 'UNIXSOCK')
     else:
         host = config_value(name, 'HOST')
         password = config_value(name, 'HOST')
