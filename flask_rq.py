@@ -78,6 +78,18 @@ def get_worker(*queues):
         connection=get_connection(queues[0]))
 
 
+# PDG: Workaround for limitations of rq.job.get_current_job()
+def get_current_job():
+    """Returns the Job instance that is currently being executed.  If this
+    function is invoked from outside a job context, None is returned.
+    """
+    from rq.job import _job_stack, Job
+    job_id = _job_stack.top
+    if job_id is None:
+        return None
+    return Job.fetch(job_id, connection=get_connection())
+
+
 def job(func_or_queue=None):
     if callable(func_or_queue):
         func = func_or_queue
